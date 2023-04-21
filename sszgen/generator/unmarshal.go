@@ -107,8 +107,20 @@ func (v *Value) unmarshal(dst string) string {
 	case TypeTime:
 		return fmt.Sprintf("::.%s = ssz.UnmarshalTime(%s)", v.name, dst)
 
+	case TypeBigInt:
+		tmpl := `if err = ssz.ValidateBigInt(::.{{.name}}, {{.size}}); err != nil {
+			return err
+		}
+		::.{{.name}} = ssz.UnmarshalBigInt({{.dst}})`
+		return execTmpl(tmpl, map[string]interface{}{
+			"validate": v.validate(),
+			"name":     v.name,
+			"size":     v.s,
+			"dst":      dst,
+		})
+
 	default:
-		panic(fmt.Errorf("unmarshal not implemented for type %d", v.t))
+		panic(fmt.Errorf("unmarshal not implemented for type %s", v.t.String()))
 	}
 }
 

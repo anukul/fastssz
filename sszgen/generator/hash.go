@@ -224,6 +224,23 @@ func (v *Value) hashTreeRoot(name string, appendBytes bool) string {
 	case TypeTime:
 		return fmt.Sprintf("hh.PutUint64(uint64(%s.Unix()))", name)
 
+	case TypeBigInt:
+		tmpl := `{{.validate}}
+	dst := make([]byte, {{.size}})
+	dst = {{.name}}.FillBytes(dst)
+	// Reverse dst to little endian byte order
+	for i, j := 0, len(dst)-1; i < j; i, j = i+1, j-1 {
+		dst[i], dst[j] = dst[j], dst[i]
+	}
+	hh.PutBytes(dst)
+`
+
+		return execTmpl(tmpl, map[string]interface{}{
+			"name":     name,
+			"size":     v.s,
+			"validate": v.validate(),
+		})
+
 	default:
 		panic(fmt.Errorf("hash not implemented for type %s", v.t.String()))
 	}

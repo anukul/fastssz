@@ -234,6 +234,8 @@ const (
 	TypeReference
 	// TypeTime is a timestamp
 	TypeTime
+	// TypeBigInt is a big int
+	TypeBigInt
 )
 
 func (t Type) String() string {
@@ -258,6 +260,8 @@ func (t Type) String() string {
 		return "reference"
 	case TypeTime:
 		return "time.Time"
+	case TypeBigInt:
+		return "big.Int"
 	default:
 		panic("not found")
 	}
@@ -1146,6 +1150,12 @@ func (e *env) parseASTFieldType(name, tags string, expr ast.Expr) (*Value, error
 
 		if exprName == "time" && sel == "Time" {
 			return &Value{t: TypeTime, s: 8}, nil
+		} else if exprName == "big" && sel == "Int" {
+			maxSize, ok := getTagsInt(tags, "ssz-max")
+			if !ok {
+				return nil, fmt.Errorf("big.Int %s does not have ssz-max tag", name)
+			}
+			return &Value{t: TypeBigInt, m: maxSize, s: maxSize}, nil
 		} else if sel == "Bitlist" {
 			// go-bitfield/Bitlist
 			maxSize, ok := getTagsInt(tags, "ssz-max")
@@ -1265,6 +1275,8 @@ func (v *Value) isFixed() bool {
 		}
 		return false
 	case TypeTime:
+		return true
+	case TypeBigInt:
 		return true
 	default:
 		// TypeUndefined should be the only type to fallthrough to this case

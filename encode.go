@@ -3,6 +3,7 @@ package ssz
 import (
 	"encoding/binary"
 	"fmt"
+	"math/big"
 	"math/bits"
 	"time"
 )
@@ -23,6 +24,7 @@ var (
 	ErrListTooBig            = fmt.Errorf("list length is higher than max value")
 	ErrEmptyBitlist          = fmt.Errorf("bitlist is empty")
 	ErrInvalidVariableOffset = fmt.Errorf("invalid ssz encoding. first variable element offset indexes into fixed value data")
+	ErrBigIntTooBig          = fmt.Errorf("bigint bit length is bigger than size")
 )
 
 func ErrBytesLengthFn(name string, found, expected int) error {
@@ -35,6 +37,10 @@ func ErrVectorLengthFn(name string, found, expected int) error {
 
 func ErrListTooBigFn(name string, found, max int) error {
 	return fmt.Errorf("%s (%v): max expected %d and %d found", name, ErrListTooBig, max, found)
+}
+
+func ErrBigIntTooBigFn(name string, found, max int) error {
+	return fmt.Errorf("%s (%v): max expected %d and %d found", name, ErrBigIntTooBig, max, found)
 }
 
 // ---- Unmarshal functions ----
@@ -70,6 +76,15 @@ func UnmarshalBool(src []byte) bool {
 // UnmarshalTime unmarshals a time.Time from the src input
 func UnmarshalTime(src []byte) time.Time {
 	return time.Unix(int64(UnmarshallUint64(src)), 0).UTC()
+}
+
+// UnmarshalBigInt unmarshals a big.Int from the src input
+func UnmarshalBigInt(src []byte) big.Int {
+	// Reverse src to big endian byte encoding
+	for i, j := 0, len(src)-1; i < j; i, j = i+1, j-1 {
+		src[i], src[j] = src[j], src[i]
+	}
+	return *big.NewInt(0).SetBytes(src)
 }
 
 // ---- Marshal functions ----
@@ -117,6 +132,16 @@ func MarshalBool(dst []byte, b bool) []byte {
 // MarshalTime marshals a time to dst
 func MarshalTime(dst []byte, t time.Time) []byte {
 	return MarshalUint64(dst, uint64(t.Unix()))
+}
+
+// MarshalBigInt marshals a big int to dst
+func MarshalBigInt(dst []byte, x big.Int) []byte {
+	dst = x.FillBytes(dst)
+	// Reverse `dst` to little endian byte order
+	for i, j := 0, len(dst)-1; i < j; i, j = i+1, j-1 {
+		dst[i], dst[j] = dst[j], dst[i]
+	}
+	return dst
 }
 
 // ---- offset functions ----
@@ -217,6 +242,15 @@ func ValidateBitlist(buf []byte, bitLimit uint64) error {
 
 	if numOfBits > bitLimit {
 		return fmt.Errorf("too many bits")
+	}
+	return nil
+}
+
+func ValidateBigInt(b big.Int, bufLength uint) error {
+	bitLength := b.BitLen()
+	requiredLength := ((bitLength + 7) & -8) >> 3
+	if bufLength < uint(requiredLength) {
+		return ErrBigIntTooBigFn("BigIntType.BigInt", requiredLength, 64)
 	}
 	return nil
 }

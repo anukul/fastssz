@@ -52,6 +52,21 @@ func (v *Value) validate() string {
 			"size": v.s,
 		})
 
+	case TypeBigInt:
+		tmpl := `bitLength := ::.{{.name}}.BitLen()
+		// The minimal byte length is bitLength rounded up
+		// to the next multiple of 8, divided by 8.
+		requiredLength := ((bitLength + 7) & -8) >> 3
+		if {{.size}} < requiredLength {
+			err = ssz.ErrBigIntTooBigFn("--.{{.name}}", requiredLength, {{.size}})
+			return
+		}
+		`
+		return execTmpl(tmpl, map[string]interface{}{
+			"name": v.name,
+			"size": v.s,
+		})
+
 	default:
 		return ""
 	}

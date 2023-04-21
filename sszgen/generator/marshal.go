@@ -80,6 +80,14 @@ func (v *Value) marshal() string {
 	case TypeTime:
 		return fmt.Sprintf("dst = ssz.MarshalTime(dst, ::.%s)", v.name)
 
+	case TypeBigInt:
+		tmpl := `{{.validate}}dst = ssz.MarshalBigInt(dst, ::.{{.name}})`
+
+		return execTmpl(tmpl, map[string]interface{}{
+			"name":     v.name,
+			"validate": v.validate(),
+		})
+
 	default:
 		panic(fmt.Errorf("marshal not implemented for type %s", v.t.String()))
 	}
