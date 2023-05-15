@@ -3,7 +3,7 @@ package testcases
 import (
 	"bytes"
 	"fmt"
-	ssz "github.com/ferranbt/fastssz"
+	ssz "github.com/anukul/fastssz"
 	"github.com/stretchr/testify/assert"
 	"math/big"
 	"testing"

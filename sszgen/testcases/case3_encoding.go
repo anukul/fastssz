@@ -4,8 +4,8 @@
 package testcases
 
 import (
-	ssz "github.com/ferranbt/fastssz"
-	"github.com/ferranbt/fastssz/sszgen/testcases/other"
+	ssz "github.com/anukul/fastssz"
+	"github.com/anukul/fastssz/sszgen/testcases/other"
 )
 
 // MarshalSSZ ssz marshals the Case3B object

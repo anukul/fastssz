@@ -3,7 +3,7 @@
 package testcases
 
 import (
-	ssz "github.com/ferranbt/fastssz"
+	ssz "github.com/anukul/fastssz"
 )
 
 // MarshalSSZ ssz marshals the TimeType object

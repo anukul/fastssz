@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ferranbt/fastssz/sszgen/generator"
-	"github.com/ferranbt/fastssz/sszgen/version"
+	"github.com/anukul/fastssz/sszgen/generator"
+	"github.com/anukul/fastssz/sszgen/version"
 )
 
 func main() {
